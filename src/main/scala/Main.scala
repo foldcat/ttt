@@ -45,7 +45,7 @@ import scala.concurrent.duration._
 //     runGame.forerverM
 //
 
-object Main extends IOApp:
+object Main extends IOApp.Simple:
   enum CellState:
     case X, O, E
 
@@ -61,26 +61,12 @@ object Main extends IOApp:
 
   case class Target(x: Int, y: Int, swap: CellState)
 
-  def formatTable(target: Cell): String =
+  def formatTable(target: Cell): Vector[String] =
     target
-      .flatMap(_.mkString(" "))
-      .mkString("\n")
+      .map(_.mkString(" "))
 
-  def mutateSetup(target: Target): State[Cell, Unit] =
-    State(tree =>
-      (
-        tree.updated(
-          target.x,
-          tree(target.x).updated(target.y, target.swap)
-        ),
-        ()
-      )
-    )
-
-  def multiMut() =
-    import CellState._
-    for result <- mutateSetup(Target(0, 1, X))
-    yield result
+  def mutateSetup(tree: Cell, target: Target): Cell =
+    tree.updated(target.x, tree(target.x).updated(target.y, target.swap))
 
   extension (s: String)
     def parseState(): CellState =
@@ -89,24 +75,34 @@ object Main extends IOApp:
         case "x" => X
         case "o" => O
 
+  extension (s: Cell)
+    def isFinished(): Boolean = 
+      true
+
   def parseUserInput(in: String): Target =
     val splitted = in.split(" ")
     val coord = in.take(2).map(_.toInt)
     Target(coord(1), coord(2), splitted(3).parseState())
 
-  def gameLogic(current: State[Cell, Any], action: Target): State[Cell, Unit] =
-    mutateSetup(action)
+  def gameLogic(current: Cell, action: Target): Cell =
+    mutateSetup(current, action)
 
-  def gameLoop(currentState: State[Cell, Any]): IO[Unit] =
+  def gameLoop(currentState: Cell): IO[Unit] =
     IO.readLine
       .map(line => parseUserInput(line))
       .map(action => gameLogic(currentState, action))
-      .flatTap(newState => 
-          State.get.flatMap(_))
+      .flatTap(newState => formatTable(newState).traverse_(IO.println))
+      .flatMap(newState => 
+          if newState.isFinished() then
+            IO.println("done")
+          else 
+            gameLoop(newState))
 
-  override def run(args: List[String]): IO[ExitCode] =
-    for
-      _ <- IO.println("start")
-      _ <- IO.println(formatTable(defaultSetup))
-      _ <- IO.println("end")
-    yield ExitCode.Success
+  def runGame(): IO[Unit] =
+    IO.println("start") >>
+    formatTable(defaultSetup).traverse_(IO.println) >>
+    gameLoop(defaultSetup) >>
+    IO.println("done")
+
+  override final val run: IO[Unit] = 
+    runGame().foreverM
