@@ -4,7 +4,6 @@ import cats.effect.{IO, IOApp, Resource}
 import cats.effect.ExitCode
 import cats.syntax.all._
 import cats.data.State
-import java.io._
 import scala.concurrent.duration._
 
 enum CellState:
@@ -14,20 +13,28 @@ object Check:
   import CellState._
 
   def hasWinner(board: Vector[Vector[CellState]]): Boolean =
-    board.exists(_.forall(_ == X)) || board.exists(_.forall(_ == O))
-    (0 until board(0).length).exists(col =>
-      board.forall(row => row(col) == X)
-    ) ||
-    (0 until board(0).length)
-      .exists(col => board.forall(row => row(col) == O))
-    Vector(
-      (board(0)(0), board(1)(1), board(2)(2)),
-      (board(0)(2), board(1)(1), board(2)(0))
-    ).exists(diagonal => diagonal.forall(_ == X)) ||
-    Vector(
-      (board(0)(0), board(1)(1), board(2)(2)),
-      (board(0)(2), board(1)(1), board(2)(0))
-    ).exists(diagonal => diagonal.forall(_ == O))
+    getWinner(board).isDefined
+
+  def getWinner(board: Vector[Vector[CellState]]): Option[CellState] =
+    val diagonal = (0 until board.length).map(
+      offset => (offset, offset))
+    val retrogradeDiagonal = (0 until board.length).map(
+      offset => (offset, board.length - offset - 1))
+    val horizontal = (0 until board.length).map(
+      y => (0 until board(y).length).map(
+        x => (y, x)))
+    val vertical = (0 until board.length).map(
+      y => (0 until board(y).length).map(
+        x => (x, y)))
+    val lines = Vector.empty :+ diagonal :+ retrogradeDiagonal :++ horizontal :++ vertical
+    val asStates = lines.map(vector => vector.map((x, y) => board(x)(y)))
+    val asStateSets = asStates.map(_.distinct)
+    val asSingles = asStateSets.filter(_.length == 1).map(_(0))
+    val winner: Option[CellState] = asSingles.find(_ != E)
+    winner match
+      case Some(state) => println(s"Winner is $state")
+      case None =>
+    winner
 
 object Main extends IOApp.Simple:
 
@@ -61,6 +68,7 @@ object Main extends IOApp.Simple:
       s match
         case "X" => X
         case "O" => O
+        case "E" => E
 
   extension (s: Cell)
     def isFinished(): Boolean =
