@@ -62,9 +62,12 @@ object Main extends IOApp.Simple:
   case class Target(x: Int, y: Int, swap: CellState)
 
   def formatTable(target: Cell): String =
-    target
-      .map(_.mkString(" "))
+    target.zipWithIndex
+      .map { case (inside, index) =>
+        (index + 1) + " " + inside.mkString(" ")
+      }
       .mkString("\n")
+      + "\n  1 2 3 "
       + "\n---"
 
   def mutateSetup(tree: Cell, target: Target): Cell =
@@ -84,8 +87,8 @@ object Main extends IOApp.Simple:
   def parseUserInput(in: String): Target =
     val splitted = in.split(" ")
     Target(
-      splitted(0).toInt,
-      splitted(1).toInt,
+      splitted(0).toInt - 1,
+      splitted(1).toInt - 1,
       splitted(2).parseState()
     )
 
@@ -96,8 +99,7 @@ object Main extends IOApp.Simple:
     IO.readLine
       .map(line => parseUserInput(line))
       .map(action => gameLogic(currentState, action))
-      .flatTap(newState => 
-          IO.println("---\n" + formatTable(newState)))
+      .flatTap(newState => IO.println("---\n" + formatTable(newState)))
       .flatMap(newState =>
         if newState.isFinished() then IO.println("done")
         else gameLoop(newState)
