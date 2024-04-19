@@ -7,44 +7,6 @@ import cats.data.State
 import java.io._
 import scala.concurrent.duration._
 
-//
-// // Parses the user input into a game action.
-// def parseUserInput(line: String): Action
-//
-// // Produces the new state given the user action.
-// def gameLogic(currentState: State, action: Action): State
-//
-// // Formats the state into a printable format.
-// def formatState(state: State): List[String]
-//
-// def gameLoop(currentState: State): IO[Unit] =
-//   IO
-//     .readLine
-//     .map(line => parseUserInput(line))
-//     .map(action => gameLogic(currentState, action))
-//     .flatTap(newState => formatState(state).traverse_(IO.println))
-//     .flatMap { newState =>
-//       if newState.isFinished then
-//         IO.println("Game finished!")
-//       else
-//         gameLoop(newState)
-//     }
-//
-// val runGame: IO[Unit] =
-//   IO.println("Tic-Tac-Toe Game start") >>
-//   gameLoop(State.initial) >>
-//   IO.println("Play again?") >>
-//   IO.readLine.flatMap {
-//      case "yes" => runGame
-//      case "no" => IO.unit
-//      case wrongInput => IO.raiseError(IllegalInput(wrongInput)) // Or just ask again, whatever.
-//   }
-//
-// object Main extends IOApp.Simple:
-//   override final val run: IO[Unit] =
-//     runGame.forerverM
-//
-
 object Main extends IOApp.Simple:
   enum CellState:
     case X, O, E
