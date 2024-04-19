@@ -61,9 +61,11 @@ object Main extends IOApp.Simple:
 
   case class Target(x: Int, y: Int, swap: CellState)
 
-  def formatTable(target: Cell): Vector[String] =
+  def formatTable(target: Cell): String =
     target
       .map(_.mkString(" "))
+      .mkString("\n")
+      + "\n---"
 
   def mutateSetup(tree: Cell, target: Target): Cell =
     tree.updated(target.x, tree(target.x).updated(target.y, target.swap))
@@ -72,17 +74,20 @@ object Main extends IOApp.Simple:
     def parseState(): CellState =
       import CellState._
       s match
-        case "x" => X
-        case "o" => O
+        case "X" => X
+        case "O" => O
 
   extension (s: Cell)
-    def isFinished(): Boolean = 
-      true
+    def isFinished(): Boolean =
+      false
 
   def parseUserInput(in: String): Target =
     val splitted = in.split(" ")
-    val coord = in.take(2).map(_.toInt)
-    Target(coord(1), coord(2), splitted(3).parseState())
+    Target(
+      splitted(0).toInt,
+      splitted(1).toInt,
+      splitted(2).parseState()
+    )
 
   def gameLogic(current: Cell, action: Target): Cell =
     mutateSetup(current, action)
@@ -91,18 +96,18 @@ object Main extends IOApp.Simple:
     IO.readLine
       .map(line => parseUserInput(line))
       .map(action => gameLogic(currentState, action))
-      .flatTap(newState => formatTable(newState).traverse_(IO.println))
-      .flatMap(newState => 
-          if newState.isFinished() then
-            IO.println("done")
-          else 
-            gameLoop(newState))
+      .flatTap(newState => 
+          IO.println("---\n" + formatTable(newState)))
+      .flatMap(newState =>
+        if newState.isFinished() then IO.println("done")
+        else gameLoop(newState)
+      )
 
   def runGame(): IO[Unit] =
-    IO.println("start") >>
-    formatTable(defaultSetup).traverse_(IO.println) >>
-    gameLoop(defaultSetup) >>
-    IO.println("done")
+    IO.println("start\n") >>
+      IO.println(formatTable(defaultSetup) + "\n") >>
+      gameLoop(defaultSetup) >>
+      IO.println("done\n")
 
-  override final val run: IO[Unit] = 
+  override final val run: IO[Unit] =
     runGame().foreverM
