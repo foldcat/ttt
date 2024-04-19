@@ -68,7 +68,6 @@ object Main extends IOApp.Simple:
       s match
         case "X" => X
         case "O" => O
-        case "E" => E
 
   extension (s: Cell)
     def isFinished(): Boolean =
