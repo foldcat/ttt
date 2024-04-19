@@ -7,9 +7,29 @@ import cats.data.State
 import java.io._
 import scala.concurrent.duration._
 
+enum CellState:
+  case X, O, E
+
+object Check:
+  import CellState._
+
+  def hasWinner(board: Vector[Vector[CellState]]): Boolean =
+    board.exists(_.forall(_ == X)) || board.exists(_.forall(_ == O))
+    (0 until board(0).length).exists(col =>
+      board.forall(row => row(col) == X)
+    ) ||
+    (0 until board(0).length)
+      .exists(col => board.forall(row => row(col) == O))
+    Vector(
+      (board(0)(0), board(1)(1), board(2)(2)),
+      (board(0)(2), board(1)(1), board(2)(0))
+    ).exists(diagonal => diagonal.forall(_ == X)) ||
+    Vector(
+      (board(0)(0), board(1)(1), board(2)(2)),
+      (board(0)(2), board(1)(1), board(2)(0))
+    ).exists(diagonal => diagonal.forall(_ == O))
+
 object Main extends IOApp.Simple:
-  enum CellState:
-    case X, O, E
 
   val defaultSetup =
     import CellState._
@@ -44,7 +64,7 @@ object Main extends IOApp.Simple:
 
   extension (s: Cell)
     def isFinished(): Boolean =
-      false
+      Check.hasWinner(s)
 
   def parseUserInput(in: String): Target =
     val splitted = in.split(" ")
