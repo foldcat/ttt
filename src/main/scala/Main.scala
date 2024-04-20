@@ -14,9 +14,6 @@ enum CellState:
 object Check:
   import CellState.*
 
-  def hasWinner(board: Vector[Vector[CellState]]): Boolean =
-    getWinner(board).isDefined
-
   def getWinner(board: Vector[Vector[CellState]]): Option[CellState] =
     val diagonal = (0 until board.length).map(offset => (offset, offset))
     val retrogradeDiagonal =
