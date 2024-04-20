@@ -16,24 +16,21 @@ object Check:
     getWinner(board).isDefined
 
   def getWinner(board: Vector[Vector[CellState]]): Option[CellState] =
-    val diagonal = (0 until board.length).map(
-      offset => (offset, offset))
-    val retrogradeDiagonal = (0 until board.length).map(
-      offset => (offset, board.length - offset - 1))
-    val horizontal = (0 until board.length).map(
-      y => (0 until board(y).length).map(
-        x => (y, x)))
-    val vertical = (0 until board.length).map(
-      y => (0 until board(y).length).map(
-        x => (x, y)))
-    val lines = Vector.empty :+ diagonal :+ retrogradeDiagonal :++ horizontal :++ vertical
+    val diagonal = (0 until board.length).map(offset => (offset, offset))
+    val retrogradeDiagonal =
+      (0 until board.length).map(offset => (offset, board.length - offset - 1))
+    val horizontal = (0 until board.length).map(y =>
+      (0 until board(y).length).map(x => (y, x))
+    )
+    val vertical = (0 until board.length).map(y =>
+      (0 until board(y).length).map(x => (x, y))
+    )
+    val lines =
+      Vector.empty :+ diagonal :+ retrogradeDiagonal :++ horizontal :++ vertical
     val asStates = lines.map(vector => vector.map((x, y) => board(x)(y)))
     val asStateSets = asStates.map(_.distinct)
     val asSingles = asStateSets.filter(_.length == 1).map(_(0))
     val winner: Option[CellState] = asSingles.find(_ != E)
-    winner match
-      case Some(state) => println(s"Winner is $state")
-      case None =>
     winner
 
 object Main extends IOApp.Simple:
@@ -69,10 +66,6 @@ object Main extends IOApp.Simple:
         case "X" => X
         case "O" => O
 
-  extension (s: Cell)
-    def isFinished(): Boolean =
-      Check.hasWinner(s)
-
   def parseUserInput(in: String): Target =
     val splitted = in.split(" ")
     Target(
@@ -90,15 +83,16 @@ object Main extends IOApp.Simple:
       .map(action => gameLogic(currentState, action))
       .flatTap(newState => IO.println("---\n" + formatTable(newState)))
       .flatMap(newState =>
-        if newState.isFinished() then IO.println("done")
-        else gameLoop(newState)
+        Check.getWinner(newState) match
+          case Some(x) => IO.println(s"$x won \n---")
+          case None    => gameLoop(newState)
       )
 
   def runGame(): IO[Unit] =
-    IO.println("start\n") >>
+    IO.println("---\nstart\n---\n") >>
       IO.println(formatTable(defaultSetup) + "\n") >>
       gameLoop(defaultSetup) >>
-      IO.println("done\n")
+      IO.println("\n---\ndone\n---\n")
 
   override final val run: IO[Unit] =
     runGame().foreverM
