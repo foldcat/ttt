@@ -31,17 +31,19 @@ object Check:
     val asSingles   = asStateSets.filter(_.length == 1).map(_(0))
     asSingles.find(_ != E)
 
+end Check
+
 object Main extends IOApp.Simple:
 
-  val defaultSetup =
+  opaque type Cell = Vector[Vector[CellState]]
+
+  val defaultSetup: Cell =
     import CellState.*
     Vector(
       Vector(E, E, E),
       Vector(E, E, E),
       Vector(E, E, E)
     )
-
-  opaque type Cell = Vector[Vector[CellState]]
 
   case class Target(x: Int, y: Int, swap: CellState)
 
@@ -94,4 +96,5 @@ object Main extends IOApp.Simple:
 
   final override val run: IO[Unit] =
     runGame().foreverM
+
 end Main
