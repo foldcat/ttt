@@ -1,16 +1,18 @@
 package org.maidagency
 
-import cats.effect.{IO, IOApp, Resource}
-import cats.effect.ExitCode
-import cats.syntax.all._
 import cats.data.State
-import scala.concurrent.duration._
+import cats.effect.ExitCode
+import cats.effect.IO
+import cats.effect.IOApp
+import cats.effect.Resource
+import cats.syntax.all.*
+import scala.concurrent.duration.*
 
 enum CellState:
   case X, O, E
 
 object Check:
-  import CellState._
+  import CellState.*
 
   def hasWinner(board: Vector[Vector[CellState]]): Boolean =
     getWinner(board).isDefined
@@ -27,16 +29,16 @@ object Check:
     )
     val lines =
       Vector.empty :+ diagonal :+ retrogradeDiagonal :++ horizontal :++ vertical
-    val asStates = lines.map(vector => vector.map((x, y) => board(x)(y)))
+    val asStates    = lines.map(vector => vector.map((x, y) => board(x)(y)))
     val asStateSets = asStates.map(_.distinct)
-    val asSingles = asStateSets.filter(_.length == 1).map(_(0))
+    val asSingles   = asStateSets.filter(_.length == 1).map(_(0))
     val winner: Option[CellState] = asSingles.find(_ != E)
     winner
 
 object Main extends IOApp.Simple:
 
   val defaultSetup =
-    import CellState._
+    import CellState.*
     Vector(
       Vector(E, E, E),
       Vector(E, E, E),
@@ -61,7 +63,7 @@ object Main extends IOApp.Simple:
 
   extension (s: String)
     def parseState(): CellState =
-      import CellState._
+      import CellState.*
       s match
         case "X" => X
         case "O" => O
@@ -94,5 +96,6 @@ object Main extends IOApp.Simple:
       gameLoop(defaultSetup) >>
       IO.println("\n---\ndone\n---\n")
 
-  override final val run: IO[Unit] =
+  final override val run: IO[Unit] =
     runGame().foreverM
+end Main
