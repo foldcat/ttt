@@ -29,8 +29,7 @@ object Check:
     val asStates    = lines.map(vector => vector.map((x, y) => board(x)(y)))
     val asStateSets = asStates.map(_.distinct)
     val asSingles   = asStateSets.filter(_.length == 1).map(_(0))
-    val winner: Option[CellState] = asSingles.find(_ != E)
-    winner
+    asSingles.find(_ != E)
 
 object Main extends IOApp.Simple:
 
